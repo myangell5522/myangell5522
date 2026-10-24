@@ -9,6 +9,8 @@ const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 // Optional: path to a JSON file with { languages, stats, calendar } for offline previews.
 const FIXTURE = process.env.WIDGET_FIXTURE || "";
 const OUT_FILE = join(ROOT, "widgets", "profile-card.svg");
+// Same card in the portfolio site's green / mint palette (myangell5522.github.io).
+const OUT_FILE_PORTFOLIO = join(ROOT, "widgets", "profile-card-portfolio.svg");
 const AVATAR_FILE = join(ROOT, "assets", "avatar.jpg");
 
 // ── Canvas & layout ────────────────────────────────────────────────────────────
@@ -32,15 +34,38 @@ const ACT_Y = 398; // contribution panel top
 const ACT_H = 104;
 
 // ── Palette ────────────────────────────────────────────────────────────────────
-const GOLD = "#E8B84A";
-const GOLD_BRIGHT = "#F7D37A";
-const CREAM = "#FFF6E4";
-const PLATE_DARK = "#1A1408";
-const TEXT = "#EEF2F8";
-const MUTED = "#8D96A8";
-const DIM = "#5B6375";
-const BG_TOP = "#14110B";
-const BG_BOTTOM = "#0A0E1A";
+// Palettes. "gold" is the GitHub profile card; "portfolio" matches the website.
+const THEMES = {
+  gold: {
+    GOLD: "#E8B84A",
+    GOLD_BRIGHT: "#F7D37A",
+    CREAM: "#FFF6E4",
+    PLATE_DARK: "#1A1408",
+    TEXT: "#EEF2F8",
+    MUTED: "#8D96A8",
+    DIM: "#5B6375",
+    BG_TOP: "#14110B",
+    BG_BOTTOM: "#0A0E1A",
+    RING_EMPTY: "#2A2418",
+  },
+  portfolio: {
+    GOLD: "#39D353",
+    GOLD_BRIGHT: "#5FF2C8",
+    CREAM: "#EAFBF0",
+    PLATE_DARK: "#07130A",
+    TEXT: "#F0F6FC",
+    MUTED: "#8B949E",
+    DIM: "#5B6472",
+    BG_TOP: "#0B1411",
+    BG_BOTTOM: "#07090D",
+    RING_EMPTY: "#14231A",
+  },
+};
+let GOLD, GOLD_BRIGHT, CREAM, PLATE_DARK, TEXT, MUTED, DIM, BG_TOP, BG_BOTTOM, RING_EMPTY;
+function applyTheme(name) {
+  ({ GOLD, GOLD_BRIGHT, CREAM, PLATE_DARK, TEXT, MUTED, DIM, BG_TOP, BG_BOTTOM, RING_EMPTY } = THEMES[name]);
+}
+applyTheme("gold");
 
 const LANG_COLORS = {
   "C#": "#512BD4",
@@ -603,7 +628,7 @@ function renderStats(stats, activity) {
 
 function renderDonut(languages) {
   if (languages.length === 0) {
-    return `<circle cx="${CX}" cy="${CY}" r="${DONUT_R}" fill="none" stroke="#2A2418" stroke-width="${DONUT_W}"/>`;
+    return `<circle cx="${CX}" cy="${CY}" r="${DONUT_R}" fill="none" stroke="${RING_EMPTY}" stroke-width="${DONUT_W}"/>`;
   }
 
   const gap = 0.034;
@@ -992,8 +1017,12 @@ async function main() {
   const updated = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
   mkdirSync(join(ROOT, "widgets"), { recursive: true });
+  applyTheme("gold");
   writeFileSync(OUT_FILE, renderCard({ avatarData, languages, stats, activity, updated }));
   console.log(`Wrote ${OUT_FILE}`);
+  applyTheme("portfolio");
+  writeFileSync(OUT_FILE_PORTFOLIO, renderCard({ avatarData, languages, stats, activity, updated }));
+  console.log(`Wrote ${OUT_FILE_PORTFOLIO}`);
   console.log("Languages:", languages.map((l) => `${l.name} ${Math.round(l.pct * 100)}%`).join(", ") || "(none)");
   console.log("Stats:", JSON.stringify(stats));
   if (activity) console.log(`Activity: ${activity.total} in last year, streak ${activity.current}, best ${activity.longest}`);
